@@ -440,6 +440,9 @@ case "$1" in
 			log "WARN" "Skipping sync, zram-config not running."
 			exit 0
 		fi
+		if [[ $# -gt 1 ]]; then
+			ONLY_TARGET="$2"
+		fi
 		tac "$TMPDIR"/zram-device-list > "$TMPDIR"/zram-device-list.rev
 		while read -r line; do
 			case "$line" in
