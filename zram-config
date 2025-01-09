@@ -461,15 +461,13 @@ case "$1" in
 					set -- $line
 					case "$1" in
 						dir|log)
-							if [[ -z $ONLY_TARGET ]] && [[ $ONLY_TARGET != $3 ]]; then
-								continue
-								;;
+							if [[ -z "$ONLY_TARGET" ]] || [[ $ONLY_TARGET == $3 ]]; then
+								ZRAM_DEV="$2"
+								TARGET_DIR="$3"
+								BIND_DIR="$(basename "$TARGET_DIR").bind"
+								[[ -z $SHUTDOWN ]] && serviceConfiguration "stop"
+								syncZdir
 							fi
-							ZRAM_DEV="$2"
-							TARGET_DIR="$3"
-							BIND_DIR="$(basename "$TARGET_DIR").bind"
-							[[ -z $SHUTDOWN ]] && serviceConfiguration "stop"
-							syncZdir
 							;;
 					esac
 					;;
@@ -479,7 +477,7 @@ case "$1" in
 		;;
 
 	*)
-		echo "Usage: zram-config {start|stop|sync}"
+		echo "Usage: zram-config {start|stop|sync [target]}"
 		exit 0
 		;;
 esac
