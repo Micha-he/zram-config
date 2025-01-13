@@ -5,4 +5,7 @@ Wants=zsync.timer
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/zram-config "sync" 
+ExecStart=/usr/local/sbin/zram-config "sync"
+
+# Example for OpenHABian persistence-sync only
+# ExecStart=/usr/local/sbin/zram-config "sync" "/var/lib/openhab/persistence"
