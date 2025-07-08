@@ -332,148 +332,148 @@ fi
 sed -i -E 's/(\tbind_dir|\t\/\w*\.bind)//g' /etc/ztab
 
 case "$1" in
-	start)
-		log "INFO" "Starting services."
-		ZTAB_EMPTY="true"
-		while read -r line; do
-			case "$line" in
-				"#"*)
-					# Skip comment line
-					continue
-					;;
+    start)
+        log "INFO" "Starting services."
+        ZTAB_EMPTY="true"
+        while read -r line; do
+            case "$line" in
+                "#"*)
+                    # Skip comment line
+                    continue
+                    ;;
 
-				"")
-					# Skip empty line
-					continue
-					;;
+                "")
+                    # Skip empty line
+                    continue
+                    ;;
 
-				*)
-					# shellcheck disable=SC2086
-					set -- $line
-					ZTAB_EMPTY="false"
-					ZTYPE="$1"
-					ALG="$2"
-					MEM_SIZE="$3"
-					DISK_SIZE="$4"
-					if [[ -s "$TMPDIR"/zram-device-list ]]; then
-						if [[ $1 == "swap" ]]; then
-							entry="$(grep "^swap" "$TMPDIR"/zram-device-list)"
-						else
-							entry="$(grep "${1}.*${5}" "$TMPDIR"/zram-device-list)"
-						fi
-						if [[ -n $entry ]]; then
-							log "WARN" "Entry ${entry} already exists as a zram device, skipping recreation of device."
-							continue
-						fi
-					fi
+                *)
+                    # shellcheck disable=SC2086
+                    set -- $line
+                    ZTAB_EMPTY="false"
+                    ZTYPE="$1"
+                    ALG="$2"
+                    MEM_SIZE="$3"
+                    DISK_SIZE="$4"
+                    if [[ -s "$TMPDIR"/zram-device-list ]]; then
+                        if [[ $1 == "swap" ]]; then
+                            entry="$(grep "^swap" "$TMPDIR"/zram-device-list)"
+                        else
+                            entry="$(grep "${1}.*${5}" "$TMPDIR"/zram-device-list)"
+                        fi
+                        if [[ -n $entry ]]; then
+                            log "WARN" "Entry ${entry} already exists as a zram device, skipping recreation of device."
+                            continue
+                        fi
+                    fi
 
-					case "$1" in
-						swap)
-							PRIORITY="$5"
-							PAGE_CLUSTER="$6"
-							SWAPPINESS="$7"
-							createZswap
-							;;
+                    case "$1" in
+                        swap)
+                            PRIORITY="$5"
+                            PAGE_CLUSTER="$6"
+                            SWAPPINESS="$7"
+                            createZswap
+                            ;;
 
-						dir|log)
-							TARGET_DIR="$5"
-							BIND_DIR="$(basename "$TARGET_DIR").bind"
-							OLDLOG_DIR="$6"
-							serviceConfiguration "stop"
-							createZdir
-							;;
-					esac
-					;;
-			esac
-		done < /etc/ztab
-		if [[ $ZTAB_EMPTY == "true" ]]; then
-			log "ERROR" "Cannot begin start, '/etc/ztab' is empty and needs to be configured."
-			exit 1
-		fi
-		;;
+                        dir|log)
+                            TARGET_DIR="$5"
+                            BIND_DIR="$(basename "$TARGET_DIR").bind"
+                            OLDLOG_DIR="$6"
+                            serviceConfiguration "stop"
+                            createZdir
+                            ;;
+                    esac
+                    ;;
+            esac
+        done < /etc/ztab
+        if [[ $ZTAB_EMPTY == "true" ]]; then
+            log "ERROR" "Cannot begin start, '/etc/ztab' is empty and needs to be configured."
+            exit 1
+        fi
+        ;;
 
-	stop)
-		log "INFO" "Stopping services."
-		if ! [[ -s "$TMPDIR"/zram-device-list ]]; then
-			log "WARN" "Skipping stop, zram-config not running."
-			exit 0
-		fi
-		tac "$TMPDIR"/zram-device-list > "$TMPDIR"/zram-device-list.rev
-		while read -r line; do
-			case "$line" in
-				"#"*)
-					# Skip comment line
-					continue
-					;;
+    stop)
+        log "INFO" "Stopping services."
+        if ! [[ -s "$TMPDIR"/zram-device-list ]]; then
+            log "WARN" "Skipping stop, zram-config not running."
+            exit 0
+        fi
+        tac "$TMPDIR"/zram-device-list > "$TMPDIR"/zram-device-list.rev
+        while read -r line; do
+            case "$line" in
+                "#"*)
+                    # Skip comment line
+                    continue
+                    ;;
 
-				"")
-					# Skip empty line
-					continue
-					;;
+                "")
+                    # Skip empty line
+                    continue
+                    ;;
 
-				*)
-					# shellcheck disable=SC2086
-					set -- $line
-					case "$1" in
-						swap)
-							ZRAM_DEV="$2"
-							removeZswap
-							;;
+                *)
+                    # shellcheck disable=SC2086
+                    set -- $line
+                    case "$1" in
+                        swap)
+                            ZRAM_DEV="$2"
+                            removeZswap
+                            ;;
 
-						dir|log)
-							ZRAM_DEV="$2"
-							TARGET_DIR="$3"
-							BIND_DIR="$(basename "$TARGET_DIR").bind"
-							serviceConfiguration "stop"
-							removeZdir
-							;;
-					esac
-					;;
-			esac
-		done < "$TMPDIR"/zram-device-list.rev
-		rm -f "$TMPDIR"/zram-device-list.rev "$TMPDIR"/zram-device-list
-		;;
+                        dir|log)
+                            ZRAM_DEV="$2"
+                            TARGET_DIR="$3"
+                            BIND_DIR="$(basename "$TARGET_DIR").bind"
+                            serviceConfiguration "stop"
+                            removeZdir
+                            ;;
+                    esac
+                    ;;
+            esac
+        done < "$TMPDIR"/zram-device-list.rev
+        rm -f "$TMPDIR"/zram-device-list.rev "$TMPDIR"/zram-device-list
+        ;;
 
-	sync)
-		log "INFO" "Syncing files."
-		if ! [[ -s "$TMPDIR"/zram-device-list ]]; then
-			log "WARN" "Skipping sync, zram-config not running."
-			exit 0
-		fi
-		tac "$TMPDIR"/zram-device-list > "$TMPDIR"/zram-device-list.rev
-		while read -r line; do
-			case "$line" in
-				"#"*)
-					# Skip comment line
-					continue
-					;;
+    sync)
+        log "INFO" "Syncing files."
+        if ! [[ -s "$TMPDIR"/zram-device-list ]]; then
+            log "WARN" "Skipping sync, zram-config not running."
+            exit 0
+        fi
+        tac "$TMPDIR"/zram-device-list > "$TMPDIR"/zram-device-list.rev
+        while read -r line; do
+            case "$line" in
+                "#"*)
+                    # Skip comment line
+                    continue
+                    ;;
 
-				"")
-					# Skip empty line
-					continue
-					;;
+                "")
+                    # Skip empty line
+                    continue
+                    ;;
 
-				*)
-					# shellcheck disable=SC2086
-					set -- $line
-					case "$1" in
-						dir|log)
-							ZRAM_DEV="$2"
-							TARGET_DIR="$3"
-							BIND_DIR="$(basename "$TARGET_DIR").bind"
-							[[ -z $SHUTDOWN ]] && ! [[ "${@,,}" =~ (^| )--noservicerestart($| ) ]] && serviceConfiguration "stop"
-							syncZdir
-							;;
-					esac
-					;;
-			esac
-		done < "$TMPDIR"/zram-device-list.rev
-		rm -f "$TMPDIR"/zram-device-list.rev
-		;;
+                *)
+                    # shellcheck disable=SC2086
+                    set -- $line
+                    case "$1" in
+                        dir|log)
+                            ZRAM_DEV="$2"
+                            TARGET_DIR="$3"
+                            BIND_DIR="$(basename "$TARGET_DIR").bind"
+                            [[ -z $SHUTDOWN ]] && ! [[ "${@,,}" =~ (^| )--noservicerestart($| ) ]] && serviceConfiguration "stop"
+                            syncZdir
+                            ;;
+                    esac
+                    ;;
+            esac
+        done < "$TMPDIR"/zram-device-list.rev
+        rm -f "$TMPDIR"/zram-device-list.rev
+        ;;
 
-	*)
-		echo "Usage: zram-config {start|stop|sync} [--noservicerestart]"
-		exit 0
-		;;
+    *)
+        echo "Usage: zram-config {start|stop|sync} [--noservicerestart]"
+        exit 0
+        ;;
 esac
 [[ -z $SHUTDOWN ]] && ! [[ "${@,,}" =~ (^| )--noservicerestart($| ) ]] && serviceConfiguration "start"
